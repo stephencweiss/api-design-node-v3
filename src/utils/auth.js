@@ -42,7 +42,7 @@ export const signin = async (req, res) => {
     return res.status(401).send({ message: 'Bad Request' })
   }
   try {
-    const match = await user.methods.checkPassword(password)
+    const match = await user.checkPassword(password)
     if (!match) {
       return res.status(401).send({ message: 'Unauthorized' })
     }
@@ -55,5 +55,23 @@ export const signin = async (req, res) => {
 }
 
 export const protect = async (req, res, next) => {
-  next()
+  let token = req.headers.authorization.split('Bearer ')[1]
+
+  if (!token) {
+    res.status(401).end()
+  }
+  try {
+    const payload = await verifyToken(token)
+    const user = await User.findById(payload.id)
+      .select('-password')
+      .exec()
+    if (!user) {
+      res.status(401).end()
+    }
+    req.user = user
+    next()
+  } catch (error) {
+    console.error(error)
+    return res.status(401).end()
+  }
 }
