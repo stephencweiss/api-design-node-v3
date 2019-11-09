@@ -55,7 +55,12 @@ export const signin = async (req, res) => {
 }
 
 export const protect = async (req, res, next) => {
-  let token = req.headers.authorization.split('Bearer ')[1]
+  if (!req.headers || !req.headers.authorization) {
+    return res.status(401).end()
+  }
+  const bearer = req.headers.authorization
+
+  const token = bearer.split('Bearer ')[1]
 
   if (!token) {
     res.status(401).end()
